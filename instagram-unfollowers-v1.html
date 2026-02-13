@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instagram Unfollowers Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --surface: #131318;
+    --surface-2: #1a1a22;
+    --border: #2a2a35;
+    --accent: #e1306c;
+    --accent-glow: rgba(225, 48, 108, 0.3);
+    --accent-2: #f77737;
+    --text: #eeeef0;
+    --text-dim: #8888a0;
+    --success: #2ecc71;
+    --warning: #f39c12;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(225, 48, 108, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(247, 119, 55, 0.04) 0%, transparent 50%);
+    z-index: 0; pointer-events: none;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 60px 24px 100px; }
+  .header { text-align: center; margin-bottom: 56px; }
+  .logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .logo-icon { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 24px var(--accent-glow); }
+  .logo-text { font-size: 15px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
+  h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  h1 span { background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { font-size: 18px; color: var(--text-dim); font-weight: 300; max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; margin-bottom: 24px; transition: border-color 0.3s ease; }
+  .card:hover { border-color: rgba(225, 48, 108, 0.2); }
+  .card-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .card-title .num { width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .card-desc { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 20px; padding-left: 42px; }
+  kbd { background: var(--surface-2); padding: 3px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid var(--border); }
+
+  .code-wrapper { position: relative; margin-top: 16px; }
+  .code-block { background: #0d0d12; border: 1px solid var(--border); border-radius: 14px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #c8c8d8; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto; }
+  .code-block::-webkit-scrollbar { width: 6px; height: 6px; }
+  .code-block::-webkit-scrollbar-track { background: transparent; }
+  .code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .copy-btn { position: absolute; top: 12px; right: 12px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; z-index: 2; }
+  .copy-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { background: var(--success); border-color: var(--success); }
+
+  .warning { display: flex; gap: 14px; padding: 20px; background: rgba(243, 156, 18, 0.06); border: 1px solid rgba(243, 156, 18, 0.15); border-radius: 14px; margin-bottom: 32px; }
+  .warning-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .warning p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
+  .warning strong { color: var(--warning); }
+
+  .troubleshoot { background: rgba(225, 48, 108, 0.04); border: 1px solid rgba(225, 48, 108, 0.12); border-radius: 14px; padding: 24px; margin-top: 16px; }
+  .troubleshoot h4 { color: var(--accent); font-size: 15px; margin-bottom: 12px; }
+  .troubleshoot p, .troubleshoot li { color: var(--text-dim); font-size: 14px; line-height: 1.8; }
+  .troubleshoot ol { padding-left: 20px; }
+  .troubleshoot code { background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .method-tabs { display: flex; gap: 8px; margin-bottom: 32px; background: var(--surface); border-radius: 16px; padding: 6px; border: 1px solid var(--border); }
+  .method-tab { flex: 1; padding: 14px 20px; border-radius: 12px; border: none; background: transparent; color: var(--text-dim); font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.25s ease; }
+  .method-tab.active { background: var(--surface-2); color: var(--text); box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+  .method-tab:hover:not(.active) { color: var(--text); }
+  .method-panel { display: none; }
+  .method-panel.active { display: block; }
+
+  @media (max-width: 600px) { .container { padding: 32px 16px 80px; } .card { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">👁</div>
+      <div class="logo-text">Unfollow Radar</div>
+    </div>
+    <h1>See who <span>doesn't follow</span> you back</h1>
+    <p class="subtitle">Paste a script into your browser console while logged into Instagram. No passwords shared, no third-party access.</p>
+  </div>
+
+  <div class="warning">
+    <div class="warning-icon">⚠️</div>
+    <div>
+      <p><strong>Heads up:</strong> This runs entirely in your browser using Instagram's internal API. No data leaves your machine. The script has built-in delays to avoid rate-limits, but use it sparingly.</p>
+    </div>
+  </div>
+
+  <div class="method-tabs">
+    <button class="method-tab active" onclick="switchMethod('auto')">Auto-Detect (Recommended)</button>
+    <button class="method-tab" onclick="switchMethod('manual')">Enter Username Manually</button>
+  </div>
+
+  <!-- AUTO DETECT -->
+  <div id="auto-panel" class="method-panel active">
+    <div class="card">
+      <div class="card-title"><span class="num">1</span> Go to Instagram</div>
+      <p class="card-desc">Open <a href="https://www.instagram.com" target="_blank">instagram.com</a> and make sure you're logged in.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="num">2</span> Open Developer Console</div>
+      <p class="card-desc">Press <kbd>F12</kbd> then click <strong>Console</strong>, or press <kbd>Ctrl+Shift+J</kbd> (Win) / <kbd>Cmd+Option+J</kbd> (Mac).</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="num">3</span> Paste & Run</div>
+      <p class="card-desc">Copy the script, paste into console, press Enter. It tries 5+ methods to detect your account automatically. If all fail, it'll prompt for your username.</p>
+      <div class="code-wrapper">
+        <button class="copy-btn" onclick="copyCode(this, 'auto-code')">Copy</button>
+        <pre class="code-block" id="auto-code">(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const APP_ID = '936619743392459';
+  const log = (msg, c = '#f77737') => console.log('%c[Unfollow Radar] ' + msg, 'color:' + c);
+
+  if (!location.hostname.includes('instagram.com')) {
+    alert('Run this on instagram.com while logged in!');
+    return;
+  }
+
+  log('Starting Unfollow Radar v2...');
+
+  /* ── Detect user via multiple methods ── */
+  let userId = null;
+  let username = null;
+
+  /* Method 1: ds_user_id cookie */
+  const idCk = document.cookie.match(/ds_user_id=(\d+)/);
+  if (idCk) { userId = idCk[1]; log('Found user ID from cookie: ' + userId, '#2ecc71'); }
+
+  /* Method 2: ds_user cookie */
+  if (!userId) {
+    const uCk = document.cookie.match(/ds_user=([^;]+)/);
+    if (uCk) { username = decodeURIComponent(uCk[1]); log('Found username from cookie: ' + username, '#2ecc71'); }
+  }
+
+  /* Method 3: _sharedData / __initialData on page */
+  if (!userId && !username) {
+    try {
+      const sd = window._sharedData || window.__initialData;
+      if (sd && sd.config && sd.config.viewer) {
+        userId = sd.config.viewer.id;
+        username = sd.config.viewer.username;
+        log('Found user from page data: ' + username, '#2ecc71');
+      }
+    } catch (e) {}
+  }
+
+  /* Method 4: Accounts edit API (most reliable — works even when cookies are HttpOnly) */
+  if (!userId && !username) {
+    try {
+      log('Trying accounts API...');
+      const r = await fetch('/api/v1/accounts/edit/web_form_data/', {
+        headers: { 'x-ig-app-id': APP_ID }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.form_data && d.form_data.username) {
+          username = d.form_data.username;
+          log('Found user from accounts API: ' + username, '#2ecc71');
+        }
+      }
+    } catch (e) {}
+  }
+
+  /* Method 5: Look for profile link with avatar in page nav */
+  if (!userId && !username) {
+    try {
+      log('Scanning page navigation...');
+      const allLinks = document.querySelectorAll('a[href]');
+      for (const el of allLinks) {
+        const h = el.getAttribute('href');
+        if (h && h.match(/^\/[a-zA-Z0-9._]{1,30}\/$/) && el.querySelector('img[alt]')) {
+          const candidate = h.replace(/\//g, '');
+          const skip = ['explore','reels','direct','accounts','stories','p','reel'];
+          if (skip.includes(candidate)) continue;
+          username = candidate;
+          log('Found likely profile link: ' + username, '#2ecc71');
+          break;
+        }
+      }
+    } catch (e) {}
+  }
+
+  /* Method 6: Prompt user as fallback */
+  if (!userId && !username) {
+    log('Auto-detect failed. Asking for username...', '#e1306c');
+    const input = prompt('Could not auto-detect your account.\\nPlease enter your Instagram username (without @):');
+    if (!input) return;
+    username = input.trim().replace(/^@/, '');
+  }
+
+  /* Resolve userId from username if needed */
+  if (!userId && username) {
+    log('Resolving user ID for @' + username + '...');
+    try {
+      const r = await fetch('/api/v1/users/web_profile_info/?username=' + username, {
+        headers: { 'x-ig-app-id': APP_ID }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      userId = d.data.user.id;
+      log('User ID: ' + userId, '#2ecc71');
+    } catch (e) {
+      log('Failed to resolve user: ' + e.message, '#e1306c');
+      alert('Could not look up that profile. Make sure you are logged into Instagram and the username is correct.');
+      return;
+    }
+  }
+
+  if (!userId) {
+    alert('Could not determine your account. Please try the manual username version.');
+    return;
+  }
+
+  /* ── Fetch following/followers ── */
+  const fetchAll = async (uid, type) => {
+    const ep = type === 'following' ? 'following' : 'followers';
+    let url = '/api/v1/friendships/' + uid + '/' + ep + '/?count=50';
+    const users = [];
+    let pg = 0;
+    while (url && pg < 200) {
+      try {
+        const r = await fetch(url, { headers: { 'x-ig-app-id': APP_ID, 'x-requested-with': 'XMLHttpRequest' } });
+        if (r.status === 401) { log('Not authenticated — please log in again.', '#e1306c'); break; }
+        if (r.status === 429) { log('Rate limited. Waiting 60s...', '#e1306c'); await sleep(60000); continue; }
+        if (!r.ok) { await sleep(5000); pg++; continue; }
+        const d = await r.json();
+        (d.users || []).forEach(u => users.push({
+          id: String(u.pk || u.pk_id),
+          username: u.username,
+          full_name: u.full_name || '',
+          pic: u.profile_pic_url || '',
+          is_verified: u.is_verified || false
+        }));
+        log(type + ': ' + users.length + '...', '#888');
+        url = d.next_max_id ? '/api/v1/friendships/' + uid + '/' + ep + '/?count=50&max_id=' + d.next_max_id : null;
+        pg++;
+        await sleep(800 + Math.random() * 700);
+      } catch (e) { log('Error: ' + e.message, '#e1306c'); await sleep(5000); pg++; }
+    }
+    return users;
+  };
+
+  log('Fetching who you follow...');
+  const following = await fetchAll(userId, 'following');
+  log('Following: ' + following.length, '#2ecc71');
+
+  log('Fetching your followers...');
+  const followers = await fetchAll(userId, 'followers');
+  log('Followers: ' + followers.length, '#2ecc71');
+
+  const fSet = new Set(followers.map(f => f.id));
+  const unfollowers = following.filter(f => !fSet.has(f.id)).sort((a, b) => a.username.localeCompare(b.username));
+  log(unfollowers.length + " people don't follow you back!", '#e1306c');
+
+  /* ── Clean console list ── */
+  console.log('\n' + '%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c 👁 UNFOLLOW RADAR — ' + unfollowers.length + ' don\'t follow you back ', 'color:#fff;background:#e1306c;font-size:14px;font-weight:bold;padding:6px 12px;border-radius:4px');
+  console.log('%c Following: ' + following.length + '  •  Followers: ' + followers.length + '  •  Not following back: ' + unfollowers.length, 'color:#888;font-size:12px');
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log(unfollowers.map((u, i) => (i + 1) + '. @' + u.username).join('\n'));
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c TIP: Copy this list → right-click the list above → "Copy string contents"', 'color:#888;font-style:italic');
+
+  /* ── Build overlay UI ── */
+  const old = document.getElementById('unfollow-radar');
+  if (old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'unfollow-radar';
+  ov.innerHTML = `
+    <style>
+      #unfollow-radar{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#eee}
+      #ur-p{background:#1a1a2e;border-radius:20px;width:90%;max-width:540px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative}
+      #ur-hd{padding:24px 28px 16px;border-bottom:1px solid #2a2a40}
+      #ur-hd h2{margin:0 0 4px;font-size:20px}
+      .ur-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+      .ur-pill{padding:4px 14px;border-radius:100px;font-size:13px;background:#2a2a40}
+      .ur-pill.red{background:rgba(225,48,108,.15);color:#e1306c}
+      #ur-srch{width:100%;padding:10px 16px;margin-top:12px;border-radius:10px;border:1px solid #2a2a40;background:#12121e;color:#eee;font-size:14px;outline:none;font-family:inherit}
+      #ur-srch:focus{border-color:#e1306c}
+      #ur-lst{flex:1;overflow-y:auto;padding:8px 16px 16px}
+      .ur-usr{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;transition:background .15s}
+      .ur-usr:hover{background:#2a2a40}
+      .ur-av{width:40px;height:40px;border-radius:50%;background:#2a2a40;object-fit:cover;flex-shrink:0}
+      .ur-inf{flex:1;min-width:0}
+      .ur-un{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .ur-fn{color:#888;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .ur-vw{color:#888;text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid #2a2a40;border-radius:8px;white-space:nowrap;transition:all .15s}
+      .ur-vw:hover{border-color:#e1306c;color:#e1306c}
+      #ur-cls{position:absolute;top:16px;right:20px;background:none;border:none;color:#888;font-size:24px;cursor:pointer;z-index:10}
+      #ur-cls:hover{color:#eee}
+      #ur-exp{margin:12px 28px 20px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#e1306c,#f77737);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+      #ur-exp:hover{opacity:.9}
+    </style>
+    <div id="ur-p">
+      <button id="ur-cls">&times;</button>
+      <div id="ur-hd">
+        <h2>👁 Unfollow Radar — Results</h2>
+        <p style="color:#888;font-size:13px">People you follow who don't follow you back</p>
+        <div class="ur-stats">
+          <span class="ur-pill">Following: ${following.length}</span>
+          <span class="ur-pill">Followers: ${followers.length}</span>
+          <span class="ur-pill red">Don't follow back: ${unfollowers.length}</span>
+        </div>
+        <input id="ur-srch" placeholder="Search username or name..." />
+      </div>
+      <div id="ur-lst"></div>
+      <button id="ur-exp">Export list as .txt</button>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const lstEl = document.getElementById('ur-lst');
+  const render = list => {
+    if (!list.length) { lstEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#888"><div style="font-size:40px;margin-bottom:8px">🎉</div>Everyone follows you back!</div>'; return; }
+    lstEl.innerHTML = list.map(u => '<div class="ur-usr"><img class="ur-av" src="'+u.pic+'" onerror="this.style.background=\'#2a2a40\'" /><div class="ur-inf"><div class="ur-un">'+u.username+(u.is_verified?'<span style="color:#3897f0;margin-left:4px;font-size:12px">✔</span>':'')+'</div><div class="ur-fn">'+u.full_name+'</div></div><a class="ur-vw" href="https://www.instagram.com/'+u.username+'/" target="_blank">View</a></div>').join('');
+  };
+  render(unfollowers);
+
+  document.getElementById('ur-srch').oninput = e => {
+    const q = e.target.value.toLowerCase();
+    render(unfollowers.filter(u => u.username.toLowerCase().includes(q) || u.full_name.toLowerCase().includes(q)));
+  };
+  document.getElementById('ur-cls').onclick = () => ov.remove();
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  document.getElementById('ur-exp').onclick = () => {
+    const txt = unfollowers.map(u => '@'+u.username+(u.full_name?' ('+u.full_name+')':'')+' — https://www.instagram.com/'+u.username+'/').join('\n');
+    const b = new Blob(['Unfollow Radar Results\n'+unfollowers.length+' accounts don\'t follow you back\nExported: '+new Date().toLocaleString()+'\n'+'─'.repeat(40)+'\n\n'+txt],{type:'text/plain'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'unfollowers_'+new Date().toISOString().slice(0,10)+'.txt'; a.click();
+  };
+  log('Done! Results overlay is open.', '#2ecc71');
+})();</pre>
+      </div>
+      <div class="troubleshoot">
+        <h4>If it still says "not logged in":</h4>
+        <ol>
+          <li>Make sure you're on <code>instagram.com</code> (not a different tab or site)</li>
+          <li>If Chrome blocks pasting, type <code>allow pasting</code> in the console first and press Enter</li>
+          <li>Try refreshing Instagram, then paste the script again</li>
+          <li>If auto-detect fails, the script will prompt you to type your username — that always works as long as you're logged in</li>
+          <li>Or switch to the <strong>"Enter Username Manually"</strong> tab for a simpler script that asks for your username right away</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL USERNAME -->
+  <div id="manual-panel" class="method-panel">
+    <div class="card">
+      <div class="card-title"><span class="num">1</span> Go to Instagram & Open Console</div>
+      <p class="card-desc">Open <a href="https://www.instagram.com" target="_blank">instagram.com</a>, log in, then press <kbd>F12</kbd> → Console.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="num">2</span> Paste & Enter Your Username</div>
+      <p class="card-desc">This version skips auto-detection entirely and just asks for your username. Simplest approach if the auto version had trouble.</p>
+      <div class="code-wrapper">
+        <button class="copy-btn" onclick="copyCode(this, 'manual-code')">Copy</button>
+        <pre class="code-block" id="manual-code">(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const APP_ID = '936619743392459';
+  const log = (m, c = '#f77737') => console.log('%c[Unfollow Radar] ' + m, 'color:' + c);
+
+  if (!location.hostname.includes('instagram.com')) { alert('Run this on instagram.com!'); return; }
+
+  const raw = prompt('Enter your Instagram username (without @):');
+  if (!raw) return;
+  const username = raw.trim().replace(/^@/, '');
+
+  log('Looking up @' + username + '...');
+  let userId;
+  try {
+    const r = await fetch('/api/v1/users/web_profile_info/?username=' + username, { headers: { 'x-ig-app-id': APP_ID } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    userId = (await r.json()).data.user.id;
+  } catch (e) {
+    alert('Could not find that profile. Are you logged in? Is the username correct?');
+    return;
+  }
+  log('User ID: ' + userId, '#2ecc71');
+
+  const fetchAll = async (uid, type) => {
+    const ep = type === 'following' ? 'following' : 'followers';
+    let url = '/api/v1/friendships/' + uid + '/' + ep + '/?count=50';
+    const users = []; let pg = 0;
+    while (url && pg < 200) {
+      try {
+        const r = await fetch(url, { headers: { 'x-ig-app-id': APP_ID, 'x-requested-with': 'XMLHttpRequest' } });
+        if (r.status === 401) { log('Not logged in!', '#e1306c'); break; }
+        if (r.status === 429) { log('Rate limit — waiting 60s', '#e1306c'); await sleep(60000); continue; }
+        if (!r.ok) { await sleep(5000); pg++; continue; }
+        const d = await r.json();
+        (d.users||[]).forEach(u => users.push({ id: String(u.pk||u.pk_id), username: u.username, full_name: u.full_name||'', pic: u.profile_pic_url||'', is_verified: u.is_verified||false }));
+        log(type + ': ' + users.length, '#888');
+        url = d.next_max_id ? '/api/v1/friendships/'+uid+'/'+ep+'/?count=50&max_id='+d.next_max_id : null;
+        pg++; await sleep(800 + Math.random()*700);
+      } catch (e) { log('Error: '+e.message,'#e1306c'); await sleep(5000); pg++; }
+    }
+    return users;
+  };
+
+  log('Fetching following...'); const following = await fetchAll(userId, 'following');
+  log('Following: ' + following.length, '#2ecc71');
+  log('Fetching followers...'); const followers = await fetchAll(userId, 'followers');
+  log('Followers: ' + followers.length, '#2ecc71');
+
+  const fSet = new Set(followers.map(f => f.id));
+  const unf = following.filter(f => !fSet.has(f.id)).sort((a,b) => a.username.localeCompare(b.username));
+  log(unf.length + " don't follow back!", '#e1306c');
+
+  console.log('\n' + '%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c 👁 UNFOLLOW RADAR — ' + unf.length + ' don\'t follow you back ', 'color:#fff;background:#e1306c;font-size:14px;font-weight:bold;padding:6px 12px;border-radius:4px');
+  console.log('%c Following: ' + following.length + '  •  Followers: ' + followers.length + '  •  Not following back: ' + unf.length, 'color:#888;font-size:12px');
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log(unf.map((u, i) => (i + 1) + '. @' + u.username).join('\n'));
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c TIP: Right-click the list above → "Copy string contents" to copy all usernames', 'color:#888;font-style:italic');
+
+  const old = document.getElementById('unfollow-radar'); if (old) old.remove();
+  const ov = document.createElement('div'); ov.id = 'unfollow-radar';
+  ov.innerHTML = '<style>#unfollow-radar{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;color:#eee}#ur-p{background:#1a1a2e;border-radius:20px;width:90%;max-width:540px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative}#ur-hd{padding:24px 28px 16px;border-bottom:1px solid #2a2a40}#ur-hd h2{margin:0 0 4px;font-size:20px}.ur-s{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ur-p{padding:4px 14px;border-radius:100px;font-size:13px;background:#2a2a40}.ur-p.r{background:rgba(225,48,108,.15);color:#e1306c}#ur-si{width:100%;padding:10px 16px;margin-top:12px;border-radius:10px;border:1px solid #2a2a40;background:#12121e;color:#eee;font-size:14px;outline:none}#ur-l{flex:1;overflow-y:auto;padding:8px 16px 16px}.u{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px}.u:hover{background:#2a2a40}.av{width:40px;height:40px;border-radius:50%;background:#2a2a40;object-fit:cover}.inf{flex:1;min-width:0}.un{font-weight:600;font-size:14px}.fn{color:#888;font-size:12px}.vw{color:#888;text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid #2a2a40;border-radius:8px}.vw:hover{border-color:#e1306c;color:#e1306c}#ur-c{position:absolute;top:16px;right:20px;background:none;border:none;color:#888;font-size:24px;cursor:pointer}#ur-e{margin:12px 28px 20px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#e1306c,#f77737);color:#fff;font-size:14px;font-weight:600;cursor:pointer}</style><div id="ur-p"><button id="ur-c">&times;</button><div id="ur-hd"><h2>👁 Unfollow Radar</h2><p style="color:#888;font-size:13px">People you follow who don\'t follow you back</p><div class="ur-s"><span class="ur-p">Following: '+following.length+'</span><span class="ur-p">Followers: '+followers.length+'</span><span class="ur-p r">Don\'t follow back: '+unf.length+'</span></div><input id="ur-si" placeholder="Search..." /></div><div id="ur-l"></div><button id="ur-e">Export as .txt</button></div>';
+  document.body.appendChild(ov);
+  const le = document.getElementById('ur-l');
+  const rn = l => { le.innerHTML = !l.length ? '<div style="text-align:center;padding:48px;color:#888"><div style="font-size:40px;margin-bottom:8px">🎉</div>Everyone follows you back!</div>' : l.map(u=>'<div class="u"><img class="av" src="'+u.pic+'" onerror="this.style.background=\'#2a2a40\'" /><div class="inf"><div class="un">'+u.username+'</div><div class="fn">'+u.full_name+'</div></div><a class="vw" href="https://www.instagram.com/'+u.username+'/" target="_blank">View</a></div>').join(''); };
+  rn(unf);
+  document.getElementById('ur-si').oninput = e => { const q=e.target.value.toLowerCase(); rn(unf.filter(u=>u.username.toLowerCase().includes(q)||u.full_name.toLowerCase().includes(q))); };
+  document.getElementById('ur-c').onclick = () => ov.remove();
+  ov.onclick = e => { if(e.target===ov) ov.remove(); };
+  document.getElementById('ur-e').onclick = () => { const t=unf.map(u=>'@'+u.username).join('\n'); const b=new Blob(['Unfollowers ('+unf.length+')\n\n'+t],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='unfollowers.txt'; a.click(); };
+})();</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 40px;">
+    <div class="card-title">🔒 Privacy & Safety</div>
+    <p class="card-desc" style="padding-left:0;">Runs 100% in your browser. No data sent anywhere. Uses Instagram's own API endpoints your browser already has access to while logged in.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">💡 Tips</div>
+    <p class="card-desc" style="padding-left:0;">Large accounts (10k+) may take several minutes due to rate-limit delays. You can export the full list as a .txt file from the results overlay.</p>
+  </div>
+</div>
+
+<script>
+  function switchMethod(method) {
+    document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.method-panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(method + '-panel').classList.add('active');
+  }
+  function copyCode(btn, id) {
+    navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
