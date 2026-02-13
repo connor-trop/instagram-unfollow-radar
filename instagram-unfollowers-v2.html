@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNFOLLOW RADAR // by trop</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05050a;
+    --surface: rgba(10, 15, 28, 0.85);
+    --surface-2: rgba(15, 22, 40, 0.9);
+    --border: rgba(0, 255, 255, 0.12);
+    --border-hot: rgba(255, 0, 100, 0.2);
+    --cyan: #00f0ff;
+    --cyan-dim: rgba(0, 240, 255, 0.5);
+    --cyan-glow: rgba(0, 240, 255, 0.15);
+    --magenta: #ff0066;
+    --magenta-glow: rgba(255, 0, 102, 0.2);
+    --yellow: #f5e642;
+    --yellow-dim: rgba(245, 230, 66, 0.6);
+    --text: #d0e0f0;
+    --text-dim: #506080;
+    --success: #00ff88;
+    --warning: #f5e642;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated background grid + glow ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+    pointer-events: none;
+    animation: gridScroll 20s linear infinite;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(255, 0, 102, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @keyframes gridScroll {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(60px, 60px); }
+  }
+
+  /* ── Scanline overlay ── */
+  .scanlines {
+    position: fixed; inset: 0; z-index: 9999;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 860px; margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: 56px; }
+
+  .logo {
+    display: inline-flex; align-items: center; gap: 14px;
+    margin-bottom: 24px;
+    padding: 12px 28px;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+    position: relative;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  }
+
+  .logo::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--cyan-glow), transparent, var(--magenta-glow));
+    z-index: -1;
+  }
+
+  .logo-icon {
+    font-size: 20px;
+    filter: drop-shadow(0 0 8px var(--cyan));
+  }
+
+  .logo-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan-dim), 0 0 40px var(--cyan-glow);
+  }
+
+  .by-line {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--magenta);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    text-shadow: 0 0 12px var(--magenta-glow);
+    animation: flicker 4s ease-in-out infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.3; }
+    94% { opacity: 1; }
+    96% { opacity: 0.5; }
+    97% { opacity: 1; }
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(26px, 5vw, 44px);
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+  }
+
+  h1 span {
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan-dim), 0 0 60px var(--cyan-glow);
+    position: relative;
+  }
+
+  h1 span::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), transparent);
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Cyberpunk cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 24px; height: 24px;
+    border-left: 1px solid var(--cyan);
+    border-bottom: 1px solid var(--cyan);
+    opacity: 0.4;
+    transform: translate(4px, -4px) rotate(45deg);
+  }
+
+  .card:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 30px var(--cyan-glow), inset 0 0 30px rgba(0, 240, 255, 0.02);
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .card-title .num {
+    width: 30px; height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--bg);
+    background: var(--cyan);
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    box-shadow: 0 0 12px var(--cyan-dim);
+    flex-shrink: 0;
+  }
+
+  .card-desc {
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 16px;
+    padding-left: 42px;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  kbd {
+    background: rgba(0, 240, 255, 0.08);
+    padding: 3px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    text-shadow: 0 0 6px var(--cyan-glow);
+  }
+
+  /* ── Code blocks ── */
+  .code-wrapper { position: relative; margin-top: 16px; }
+
+  .code-block {
+    background: rgba(5, 5, 15, 0.95);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--magenta);
+    padding: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(0, 240, 255, 0.7);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .code-block::-webkit-scrollbar { width: 4px; height: 4px; }
+  .code-block::-webkit-scrollbar-track { background: transparent; }
+  .code-block::-webkit-scrollbar-thumb { background: var(--magenta); }
+
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    padding: 6px 16px;
+    border: 1px solid var(--cyan);
+    background: rgba(0, 240, 255, 0.05);
+    color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+
+  .copy-btn:hover {
+    background: var(--cyan);
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--cyan-dim);
+  }
+
+  .copy-btn.copied {
+    background: var(--success);
+    border-color: var(--success);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+  }
+
+  /* ── Warning box ── */
+  .warning {
+    display: flex; gap: 14px;
+    padding: 20px 24px;
+    background: rgba(245, 230, 66, 0.03);
+    border: 1px solid rgba(245, 230, 66, 0.15);
+    border-left: 3px solid var(--yellow);
+    margin-bottom: 32px;
+  }
+
+  .warning-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; filter: drop-shadow(0 0 6px var(--yellow-dim)); }
+  .warning p { color: var(--text-dim); font-size: 14px; line-height: 1.7; font-family: 'Rajdhani', sans-serif; }
+  .warning strong { color: var(--yellow); text-shadow: 0 0 8px rgba(245, 230, 66, 0.3); }
+
+  /* ── Troubleshoot ── */
+  .troubleshoot {
+    background: rgba(255, 0, 102, 0.03);
+    border: 1px solid rgba(255, 0, 102, 0.12);
+    border-left: 3px solid var(--magenta);
+    padding: 24px;
+    margin-top: 16px;
+  }
+
+  .troubleshoot h4 {
+    font-family: 'Orbitron', monospace;
+    color: var(--magenta);
+    font-size: 13px;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px var(--magenta-glow);
+  }
+
+  .troubleshoot p, .troubleshoot li { color: var(--text-dim); font-size: 14px; line-height: 1.8; }
+  .troubleshoot ol { padding-left: 20px; }
+  .troubleshoot code { background: rgba(0, 240, 255, 0.06); padding: 2px 6px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--cyan); border: 1px solid var(--border); }
+
+  a { color: var(--cyan); text-decoration: none; text-shadow: 0 0 6px var(--cyan-glow); }
+  a:hover { text-shadow: 0 0 16px var(--cyan-dim); text-decoration: none; border-bottom: 1px solid var(--cyan); }
+
+  /* ── Method tabs ── */
+  .method-tabs {
+    display: flex; gap: 0;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .method-tab {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    background: var(--surface);
+    color: var(--text-dim);
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border-right: 1px solid var(--border);
+  }
+
+  .method-tab:last-child { border-right: none; }
+
+  .method-tab.active {
+    background: rgba(0, 240, 255, 0.06);
+    color: var(--cyan);
+    box-shadow: inset 0 -2px 0 var(--cyan), 0 0 20px var(--cyan-glow);
+    text-shadow: 0 0 10px var(--cyan-dim);
+  }
+
+  .method-tab:hover:not(.active) {
+    color: var(--text);
+    background: rgba(0, 240, 255, 0.02);
+  }
+
+  .method-panel { display: none; }
+  .method-panel.active { display: block; }
+
+  /* ── Decorative corner elements ── */
+  .corner-deco {
+    position: fixed;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0, 240, 255, 0.2);
+    letter-spacing: 2px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .corner-deco.tl { top: 16px; left: 20px; }
+  .corner-deco.tr { top: 16px; right: 20px; }
+  .corner-deco.bl { bottom: 16px; left: 20px; }
+  .corner-deco.br { bottom: 16px; right: 20px; color: rgba(255, 0, 102, 0.2); }
+
+  /* ── Bottom info cards ── */
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--magenta);
+    padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+
+  .info-card .card-title {
+    color: var(--magenta);
+    text-shadow: 0 0 10px var(--magenta-glow);
+  }
+
+  .info-card p {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── Glitch title animation ── */
+  .glitch {
+    position: relative;
+  }
+
+  .glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.8;
+  }
+
+  .glitch::before {
+    color: var(--cyan);
+    z-index: -1;
+    animation: glitch1 3s infinite;
+  }
+
+  .glitch::after {
+    color: var(--magenta);
+    z-index: -2;
+    animation: glitch2 3s infinite;
+  }
+
+  @keyframes glitch1 {
+    0%, 100% { clip-path: inset(0 0 95% 0); transform: translate(0); }
+    20% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 1px); }
+    40% { clip-path: inset(50% 0 30% 0); transform: translate(2px, -1px); }
+    60% { clip-path: inset(70% 0 10% 0); transform: translate(-1px, 2px); }
+    80% { clip-path: inset(10% 0 80% 0); transform: translate(1px, -2px); }
+  }
+
+  @keyframes glitch2 {
+    0%, 100% { clip-path: inset(95% 0 0 0); transform: translate(0); }
+    20% { clip-path: inset(60% 0 20% 0); transform: translate(2px, -1px); }
+    40% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, 1px); }
+    60% { clip-path: inset(10% 0 70% 0); transform: translate(1px, -2px); }
+    80% { clip-path: inset(80% 0 10% 0); transform: translate(-1px, 2px); }
+  }
+
+  /* ── Neon line separator ── */
+  .neon-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), transparent);
+    box-shadow: 0 0 8px var(--cyan-dim);
+    margin: 40px 0 32px;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 32px 16px 80px; }
+    .card { padding: 24px 20px; }
+    .corner-deco { display: none; }
+    .method-tab { font-size: 10px; padding: 12px 10px; letter-spacing: 0.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<div class="corner-deco tl">SYS://UNFOLLOW_RADAR</div>
+<div class="corner-deco tr">v2.0.1</div>
+<div class="corner-deco bl">STATUS: ONLINE</div>
+<div class="corner-deco br">// trop</div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <span class="logo-icon">👁</span>
+      <span class="logo-text">Unfollow Radar</span>
+    </div>
+    <div class="by-line">— by trop —</div>
+    <h1 class="glitch" data-text="See who doesn't follow you back">See who <span>doesn't follow</span> you back</h1>
+    <p class="subtitle">> paste script into browser console while logged into instagram.com // no credentials shared // no third-party access_</p>
+  </div>
+
+  <div class="warning">
+    <div class="warning-icon">⚡</div>
+    <div>
+      <p><strong>[WARNING]</strong> This tool runs entirely in your browser via Instagram's internal API. Zero data exfiltration. Built-in rate-limit delays are active. Use responsibly.</p>
+    </div>
+  </div>
+
+  <div class="method-tabs">
+    <button class="method-tab active" onclick="switchMethod('auto')">// Auto-Detect</button>
+    <button class="method-tab" onclick="switchMethod('manual')">// Manual Input</button>
+  </div>
+
+  <!-- AUTO DETECT -->
+  <div id="auto-panel" class="method-panel active">
+    <div class="card">
+      <div class="card-title"><span class="num">01</span> Navigate</div>
+      <p class="card-desc">Open <a href="https://www.instagram.com" target="_blank">instagram.com</a> in your browser. Verify you are logged in.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="num">02</span> Open Console</div>
+      <p class="card-desc">Press <kbd>F12</kbd> then click <strong style="color:var(--cyan)">Console</strong>, or press <kbd>Ctrl+Shift+J</kbd> (Win) / <kbd>Cmd+Option+J</kbd> (Mac).</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="num">03</span> Execute</div>
+      <p class="card-desc">Copy the payload below, paste into console, press Enter. The script uses 5+ detection vectors to locate your account. Falls back to manual input if needed.</p>
+      <div class="code-wrapper">
+        <button class="copy-btn" onclick="copyCode(this, 'auto-code')">COPY</button>
+        <pre class="code-block" id="auto-code">(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const APP_ID = '936619743392459';
+  const log = (msg, c = '#f77737') => console.log('%c[Unfollow Radar] ' + msg, 'color:' + c);
+
+  if (!location.hostname.includes('instagram.com')) {
+    alert('Run this on instagram.com while logged in!');
+    return;
+  }
+
+  log('Starting Unfollow Radar v2...');
+
+  /* ── Detect user via multiple methods ── */
+  let userId = null;
+  let username = null;
+
+  /* Method 1: ds_user_id cookie */
+  const idCk = document.cookie.match(/ds_user_id=(\d+)/);
+  if (idCk) { userId = idCk[1]; log('Found user ID from cookie: ' + userId, '#2ecc71'); }
+
+  /* Method 2: ds_user cookie */
+  if (!userId) {
+    const uCk = document.cookie.match(/ds_user=([^;]+)/);
+    if (uCk) { username = decodeURIComponent(uCk[1]); log('Found username from cookie: ' + username, '#2ecc71'); }
+  }
+
+  /* Method 3: _sharedData / __initialData on page */
+  if (!userId && !username) {
+    try {
+      const sd = window._sharedData || window.__initialData;
+      if (sd && sd.config && sd.config.viewer) {
+        userId = sd.config.viewer.id;
+        username = sd.config.viewer.username;
+        log('Found user from page data: ' + username, '#2ecc71');
+      }
+    } catch (e) {}
+  }
+
+  /* Method 4: Accounts edit API (most reliable — works even when cookies are HttpOnly) */
+  if (!userId && !username) {
+    try {
+      log('Trying accounts API...');
+      const r = await fetch('/api/v1/accounts/edit/web_form_data/', {
+        headers: { 'x-ig-app-id': APP_ID }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.form_data && d.form_data.username) {
+          username = d.form_data.username;
+          log('Found user from accounts API: ' + username, '#2ecc71');
+        }
+      }
+    } catch (e) {}
+  }
+
+  /* Method 5: Look for profile link with avatar in page nav */
+  if (!userId && !username) {
+    try {
+      log('Scanning page navigation...');
+      const allLinks = document.querySelectorAll('a[href]');
+      for (const el of allLinks) {
+        const h = el.getAttribute('href');
+        if (h && h.match(/^\/[a-zA-Z0-9._]{1,30}\/$/) && el.querySelector('img[alt]')) {
+          const candidate = h.replace(/\//g, '');
+          const skip = ['explore','reels','direct','accounts','stories','p','reel'];
+          if (skip.includes(candidate)) continue;
+          username = candidate;
+          log('Found likely profile link: ' + username, '#2ecc71');
+          break;
+        }
+      }
+    } catch (e) {}
+  }
+
+  /* Method 6: Prompt user as fallback */
+  if (!userId && !username) {
+    log('Auto-detect failed. Asking for username...', '#e1306c');
+    const input = prompt('Could not auto-detect your account.\\nPlease enter your Instagram username (without @):');
+    if (!input) return;
+    username = input.trim().replace(/^@/, '');
+  }
+
+  /* Resolve userId from username if needed */
+  if (!userId && username) {
+    log('Resolving user ID for @' + username + '...');
+    try {
+      const r = await fetch('/api/v1/users/web_profile_info/?username=' + username, {
+        headers: { 'x-ig-app-id': APP_ID }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      userId = d.data.user.id;
+      log('User ID: ' + userId, '#2ecc71');
+    } catch (e) {
+      log('Failed to resolve user: ' + e.message, '#e1306c');
+      alert('Could not look up that profile. Make sure you are logged into Instagram and the username is correct.');
+      return;
+    }
+  }
+
+  if (!userId) {
+    alert('Could not determine your account. Please try the manual username version.');
+    return;
+  }
+
+  /* ── Fetch following/followers ── */
+  const fetchAll = async (uid, type) => {
+    const ep = type === 'following' ? 'following' : 'followers';
+    let url = '/api/v1/friendships/' + uid + '/' + ep + '/?count=50';
+    const users = [];
+    let pg = 0;
+    while (url && pg < 200) {
+      try {
+        const r = await fetch(url, { headers: { 'x-ig-app-id': APP_ID, 'x-requested-with': 'XMLHttpRequest' } });
+        if (r.status === 401) { log('Not authenticated — please log in again.', '#e1306c'); break; }
+        if (r.status === 429) { log('Rate limited. Waiting 60s...', '#e1306c'); await sleep(60000); continue; }
+        if (!r.ok) { await sleep(5000); pg++; continue; }
+        const d = await r.json();
+        (d.users || []).forEach(u => users.push({
+          id: String(u.pk || u.pk_id),
+          username: u.username,
+          full_name: u.full_name || '',
+          pic: u.profile_pic_url || '',
+          is_verified: u.is_verified || false
+        }));
+        log(type + ': ' + users.length + '...', '#888');
+        url = d.next_max_id ? '/api/v1/friendships/' + uid + '/' + ep + '/?count=50&max_id=' + d.next_max_id : null;
+        pg++;
+        await sleep(800 + Math.random() * 700);
+      } catch (e) { log('Error: ' + e.message, '#e1306c'); await sleep(5000); pg++; }
+    }
+    return users;
+  };
+
+  log('Fetching who you follow...');
+  const following = await fetchAll(userId, 'following');
+  log('Following: ' + following.length, '#2ecc71');
+
+  log('Fetching your followers...');
+  const followers = await fetchAll(userId, 'followers');
+  log('Followers: ' + followers.length, '#2ecc71');
+
+  const fSet = new Set(followers.map(f => f.id));
+  const unfollowers = following.filter(f => !fSet.has(f.id)).sort((a, b) => a.username.localeCompare(b.username));
+  log(unfollowers.length + " people don't follow you back!", '#e1306c');
+
+  /* ── Clean console list ── */
+  console.log('\n' + '%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c 👁 UNFOLLOW RADAR — ' + unfollowers.length + ' don\'t follow you back ', 'color:#fff;background:#e1306c;font-size:14px;font-weight:bold;padding:6px 12px;border-radius:4px');
+  console.log('%c Following: ' + following.length + '  •  Followers: ' + followers.length + '  •  Not following back: ' + unfollowers.length, 'color:#888;font-size:12px');
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log(unfollowers.map((u, i) => (i + 1) + '. @' + u.username).join('\n'));
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c TIP: Copy this list → right-click the list above → "Copy string contents"', 'color:#888;font-style:italic');
+
+  /* ── Build overlay UI ── */
+  const old = document.getElementById('unfollow-radar');
+  if (old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'unfollow-radar';
+  ov.innerHTML = `
+    <style>
+      #unfollow-radar{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#eee}
+      #ur-p{background:#1a1a2e;border-radius:20px;width:90%;max-width:540px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative}
+      #ur-hd{padding:24px 28px 16px;border-bottom:1px solid #2a2a40}
+      #ur-hd h2{margin:0 0 4px;font-size:20px}
+      .ur-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+      .ur-pill{padding:4px 14px;border-radius:100px;font-size:13px;background:#2a2a40}
+      .ur-pill.red{background:rgba(225,48,108,.15);color:#e1306c}
+      #ur-srch{width:100%;padding:10px 16px;margin-top:12px;border-radius:10px;border:1px solid #2a2a40;background:#12121e;color:#eee;font-size:14px;outline:none;font-family:inherit}
+      #ur-srch:focus{border-color:#e1306c}
+      #ur-lst{flex:1;overflow-y:auto;padding:8px 16px 16px}
+      .ur-usr{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;transition:background .15s}
+      .ur-usr:hover{background:#2a2a40}
+      .ur-av{width:40px;height:40px;border-radius:50%;background:#2a2a40;object-fit:cover;flex-shrink:0}
+      .ur-inf{flex:1;min-width:0}
+      .ur-un{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .ur-fn{color:#888;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .ur-vw{color:#888;text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid #2a2a40;border-radius:8px;white-space:nowrap;transition:all .15s}
+      .ur-vw:hover{border-color:#e1306c;color:#e1306c}
+      #ur-cls{position:absolute;top:16px;right:20px;background:none;border:none;color:#888;font-size:24px;cursor:pointer;z-index:10}
+      #ur-cls:hover{color:#eee}
+      #ur-exp{margin:12px 28px 20px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#e1306c,#f77737);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+      #ur-exp:hover{opacity:.9}
+    </style>
+    <div id="ur-p">
+      <button id="ur-cls">&times;</button>
+      <div id="ur-hd">
+        <h2>👁 Unfollow Radar — Results</h2>
+        <p style="color:#888;font-size:13px">People you follow who don't follow you back</p>
+        <div class="ur-stats">
+          <span class="ur-pill">Following: ${following.length}</span>
+          <span class="ur-pill">Followers: ${followers.length}</span>
+          <span class="ur-pill red">Don't follow back: ${unfollowers.length}</span>
+        </div>
+        <input id="ur-srch" placeholder="Search username or name..." />
+      </div>
+      <div id="ur-lst"></div>
+      <button id="ur-exp">Export list as .txt</button>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const lstEl = document.getElementById('ur-lst');
+  const render = list => {
+    if (!list.length) { lstEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#888"><div style="font-size:40px;margin-bottom:8px">🎉</div>Everyone follows you back!</div>'; return; }
+    lstEl.innerHTML = list.map(u => '<div class="ur-usr"><img class="ur-av" src="'+u.pic+'" onerror="this.style.background=\'#2a2a40\'" /><div class="ur-inf"><div class="ur-un">'+u.username+(u.is_verified?'<span style="color:#3897f0;margin-left:4px;font-size:12px">✔</span>':'')+'</div><div class="ur-fn">'+u.full_name+'</div></div><a class="ur-vw" href="https://www.instagram.com/'+u.username+'/" target="_blank">View</a></div>').join('');
+  };
+  render(unfollowers);
+
+  document.getElementById('ur-srch').oninput = e => {
+    const q = e.target.value.toLowerCase();
+    render(unfollowers.filter(u => u.username.toLowerCase().includes(q) || u.full_name.toLowerCase().includes(q)));
+  };
+  document.getElementById('ur-cls').onclick = () => ov.remove();
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  document.getElementById('ur-exp').onclick = () => {
+    const txt = unfollowers.map(u => '@'+u.username+(u.full_name?' ('+u.full_name+')':'')+' — https://www.instagram.com/'+u.username+'/').join('\n');
+    const b = new Blob(['Unfollow Radar Results\n'+unfollowers.length+' accounts don\'t follow you back\nExported: '+new Date().toLocaleString()+'\n'+'─'.repeat(40)+'\n\n'+txt],{type:'text/plain'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'unfollowers_'+new Date().toISOString().slice(0,10)+'.txt'; a.click();
+  };
+  log('Done! Results overlay is open.', '#2ecc71');
+})();</pre>
+      </div>
+      <div class="troubleshoot">
+        <h4>// Troubleshoot</h4>
+        <ol>
+          <li>Confirm you're on <code>instagram.com</code> (not a different tab)</li>
+          <li>If Chrome blocks pasting, type <code>allow pasting</code> in the console first</li>
+          <li>Refresh Instagram and retry</li>
+          <li>If auto-detect fails, the script will prompt for your username</li>
+          <li>Or switch to <strong style="color:var(--cyan)">// Manual Input</strong> tab</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL USERNAME -->
+  <div id="manual-panel" class="method-panel">
+    <div class="card">
+      <div class="card-title"><span class="num">01</span> Navigate & Open Console</div>
+      <p class="card-desc">Open <a href="https://www.instagram.com" target="_blank">instagram.com</a>, log in, press <kbd>F12</kbd> → Console.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="num">02</span> Execute Payload</div>
+      <p class="card-desc">Skips auto-detection. Prompts for your username directly. Simplest fallback if auto had trouble.</p>
+      <div class="code-wrapper">
+        <button class="copy-btn" onclick="copyCode(this, 'manual-code')">COPY</button>
+        <pre class="code-block" id="manual-code">(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const APP_ID = '936619743392459';
+  const log = (m, c = '#f77737') => console.log('%c[Unfollow Radar] ' + m, 'color:' + c);
+
+  if (!location.hostname.includes('instagram.com')) { alert('Run this on instagram.com!'); return; }
+
+  const raw = prompt('Enter your Instagram username (without @):');
+  if (!raw) return;
+  const username = raw.trim().replace(/^@/, '');
+
+  log('Looking up @' + username + '...');
+  let userId;
+  try {
+    const r = await fetch('/api/v1/users/web_profile_info/?username=' + username, { headers: { 'x-ig-app-id': APP_ID } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    userId = (await r.json()).data.user.id;
+  } catch (e) {
+    alert('Could not find that profile. Are you logged in? Is the username correct?');
+    return;
+  }
+  log('User ID: ' + userId, '#2ecc71');
+
+  const fetchAll = async (uid, type) => {
+    const ep = type === 'following' ? 'following' : 'followers';
+    let url = '/api/v1/friendships/' + uid + '/' + ep + '/?count=50';
+    const users = []; let pg = 0;
+    while (url && pg < 200) {
+      try {
+        const r = await fetch(url, { headers: { 'x-ig-app-id': APP_ID, 'x-requested-with': 'XMLHttpRequest' } });
+        if (r.status === 401) { log('Not logged in!', '#e1306c'); break; }
+        if (r.status === 429) { log('Rate limit — waiting 60s', '#e1306c'); await sleep(60000); continue; }
+        if (!r.ok) { await sleep(5000); pg++; continue; }
+        const d = await r.json();
+        (d.users||[]).forEach(u => users.push({ id: String(u.pk||u.pk_id), username: u.username, full_name: u.full_name||'', pic: u.profile_pic_url||'', is_verified: u.is_verified||false }));
+        log(type + ': ' + users.length, '#888');
+        url = d.next_max_id ? '/api/v1/friendships/'+uid+'/'+ep+'/?count=50&max_id='+d.next_max_id : null;
+        pg++; await sleep(800 + Math.random()*700);
+      } catch (e) { log('Error: '+e.message,'#e1306c'); await sleep(5000); pg++; }
+    }
+    return users;
+  };
+
+  log('Fetching following...'); const following = await fetchAll(userId, 'following');
+  log('Following: ' + following.length, '#2ecc71');
+  log('Fetching followers...'); const followers = await fetchAll(userId, 'followers');
+  log('Followers: ' + followers.length, '#2ecc71');
+
+  const fSet = new Set(followers.map(f => f.id));
+  const unf = following.filter(f => !fSet.has(f.id)).sort((a,b) => a.username.localeCompare(b.username));
+  log(unf.length + " don't follow back!", '#e1306c');
+
+  console.log('\n' + '%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c 👁 UNFOLLOW RADAR — ' + unf.length + ' don\'t follow you back ', 'color:#fff;background:#e1306c;font-size:14px;font-weight:bold;padding:6px 12px;border-radius:4px');
+  console.log('%c Following: ' + following.length + '  •  Followers: ' + followers.length + '  •  Not following back: ' + unf.length, 'color:#888;font-size:12px');
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log(unf.map((u, i) => (i + 1) + '. @' + u.username).join('\n'));
+  console.log('%c ─────────────────────────────────────────── ', 'color:#2a2a40');
+  console.log('%c TIP: Right-click the list above → "Copy string contents" to copy all usernames', 'color:#888;font-style:italic');
+
+  const old = document.getElementById('unfollow-radar'); if (old) old.remove();
+  const ov = document.createElement('div'); ov.id = 'unfollow-radar';
+  ov.innerHTML = '<style>#unfollow-radar{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;color:#eee}#ur-p{background:#1a1a2e;border-radius:20px;width:90%;max-width:540px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative}#ur-hd{padding:24px 28px 16px;border-bottom:1px solid #2a2a40}#ur-hd h2{margin:0 0 4px;font-size:20px}.ur-s{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ur-p{padding:4px 14px;border-radius:100px;font-size:13px;background:#2a2a40}.ur-p.r{background:rgba(225,48,108,.15);color:#e1306c}#ur-si{width:100%;padding:10px 16px;margin-top:12px;border-radius:10px;border:1px solid #2a2a40;background:#12121e;color:#eee;font-size:14px;outline:none}#ur-l{flex:1;overflow-y:auto;padding:8px 16px 16px}.u{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px}.u:hover{background:#2a2a40}.av{width:40px;height:40px;border-radius:50%;background:#2a2a40;object-fit:cover}.inf{flex:1;min-width:0}.un{font-weight:600;font-size:14px}.fn{color:#888;font-size:12px}.vw{color:#888;text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid #2a2a40;border-radius:8px}.vw:hover{border-color:#e1306c;color:#e1306c}#ur-c{position:absolute;top:16px;right:20px;background:none;border:none;color:#888;font-size:24px;cursor:pointer}#ur-e{margin:12px 28px 20px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#e1306c,#f77737);color:#fff;font-size:14px;font-weight:600;cursor:pointer}</style><div id="ur-p"><button id="ur-c">&times;</button><div id="ur-hd"><h2>👁 Unfollow Radar</h2><p style="color:#888;font-size:13px">People you follow who don\'t follow you back</p><div class="ur-s"><span class="ur-p">Following: '+following.length+'</span><span class="ur-p">Followers: '+followers.length+'</span><span class="ur-p r">Don\'t follow back: '+unf.length+'</span></div><input id="ur-si" placeholder="Search..." /></div><div id="ur-l"></div><button id="ur-e">Export as .txt</button></div>';
+  document.body.appendChild(ov);
+  const le = document.getElementById('ur-l');
+  const rn = l => { le.innerHTML = !l.length ? '<div style="text-align:center;padding:48px;color:#888"><div style="font-size:40px;margin-bottom:8px">🎉</div>Everyone follows you back!</div>' : l.map(u=>'<div class="u"><img class="av" src="'+u.pic+'" onerror="this.style.background=\'#2a2a40\'" /><div class="inf"><div class="un">'+u.username+'</div><div class="fn">'+u.full_name+'</div></div><a class="vw" href="https://www.instagram.com/'+u.username+'/" target="_blank">View</a></div>').join(''); };
+  rn(unf);
+  document.getElementById('ur-si').oninput = e => { const q=e.target.value.toLowerCase(); rn(unf.filter(u=>u.username.toLowerCase().includes(q)||u.full_name.toLowerCase().includes(q))); };
+  document.getElementById('ur-c').onclick = () => ov.remove();
+  ov.onclick = e => { if(e.target===ov) ov.remove(); };
+  document.getElementById('ur-e').onclick = () => { const t=unf.map(u=>'@'+u.username).join('\n'); const b=new Blob(['Unfollowers ('+unf.length+')\n\n'+t],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='unfollowers.txt'; a.click(); };
+})();</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="neon-line"></div>
+
+  <div class="info-card">
+    <div class="card-title">🔒 Security Protocol</div>
+    <p>Zero data exfiltration. Runs 100% client-side using Instagram's own authenticated API endpoints. No credentials leave your browser.</p>
+  </div>
+  <div class="info-card">
+    <div class="card-title">⚡ Performance Notes</div>
+    <p>Large accounts (10k+ following) may require several minutes due to rate-limit mitigation delays. Export the full target list via the .txt export in the results overlay.</p>
+  </div>
+</div>
+
+<script>
+  function switchMethod(method) {
+    document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.method-panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(method + '-panel').classList.add('active');
+  }
+  function copyCode(btn, id) {
+    navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+      btn.textContent = 'COPIED'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
